@@ -1,0 +1,879 @@
+---
+title: "Citi Bike Jersey City"
+
+output: html_document
+---
+
+
+Aline de Almeida Ribeiro
+
+November, 2018
+
+
+## Abstract
+
+The main goal of this project is to identify patterns and trends in the way bikers behave while using  Citi Bike Jersey City services. This project also details the creation of an algorithm that uses weather and individual trip data to predict the total number of bike journeys on a given date and hour in Jersey City, through the bike share service.
+
+## My Clients
+
+My client is Citibank and their sponsored bikeshare service called Citi Bike, available in two North American cities: New York and Jersey City. I will focus my analysis on the trips made by users in Jersey City exclusively during the three first years of operations. Citi Bike is actually owned and operated by Motivate, the manager of several bike share systems in the world, which makes Motivate a potential client as well. 
+
+City Bike share system allows users to pick up a bike at any location and return it to any other station of the network. Anyone 16 or older can either become an annual member or buy a short-term pass (24-hour or 3-day). All they have to do is find an available bike nearby through the City Bike app, unlock it with a ride code or member key, take as many time-limited rides as they want and then return the bike to a docking station. 
+
+## Project Proposal 
+Here are some of the questions I will try to answer with my analysis:
+
+* Can we predict the total number of trips starting at a given date and time? 
+* Which journeys are most popular? 
+* Which start station is most frequent? Does it change during the day?
+* Is it possible to identify any seasonality on this data? For example: what days of the week,  hours of the day and weeks of the year are most rides taken on?
+* What are the differences between trips made on weekdays and weekends?
+
+Citi Bikes could use this analysis to have insights on how to run a more efficient and profitable service, as well as to identify business opportunities, such as: deciding in each region they should change the quantity of bikes available; when and where to relocate a docking station; what their frequent clientes are like; how users prefer to pay for this service; what is the most adequate moment to schedule maintenance; forecast the need of replacing a bike; measuring the program's success. Being able to predict the number of trips in a certain time and date could be used to help the service provider anticipate the demand for their service. 
+
+
+## Original Data
+The data consists of 36 csv files, one for each operating month. They have been made available by Citi Bikes and  can be downloaded [here]( https://s3.amazonaws.com/tripdata/index.html). 
+
+I am going to analyze data from September 2015 until August 2018, compressing all trips made in Jersey City since the launch of the service in this region.
+
+The overall data set includes over 860,000 observations and 15 variables, as follows:
+
+* Trip Duration in seconds
+
+* Start Time and Date
+
+* Stop Time and Date
+
+* Start Station Name
+
+* End Station Name
+
+* Start and End Station IDs
+
+* Station Lat/Long
+
+* Bike ID
+
+* User Type 
+
+* Gender
+
+* Year of Birth
+
+It is important to highlight that Citi Bikes have processed the data to remove trips that had been taken by their staff to test their system and services. They have also deleted any trips under 60 seconds in duration.
+
+## Initial Data Wrangling
+
+After downloading and unzipping all 36 csv files, they were read into R Studio individually using read_csv().
+
+```{r include=FALSE}
+Sys.setlocale("LC_TIME", "English_US")
+setwd("C:/Users/aline/Desktop/Springboard/JC_Citi_Bikes_Capstone")
+
+```
+
+
+```{r message=FALSE}
+library(readr)
+jc201509 <- read_csv("JC-201509-citibike-tripdata.csv")
+jc201510 <- read_csv("JC-201510-citibike-tripdata.csv")
+jc201511 <- read_csv("JC-201511-citibike-tripdata.csv")
+jc201512 <- read_csv("JC-201512-citibike-tripdata.csv")
+#...
+
+```
+
+```{r include=FALSE}
+jc201601 <- read_csv("JC-201601-citibike-tripdata.csv")
+jc201602 <- read_csv("JC-201602-citibike-tripdata.csv")
+jc201603 <- read_csv("JC-201603-citibike-tripdata.csv")
+jc201604 <- read_csv("JC-201604-citibike-tripdata.csv")
+jc201605 <- read_csv("JC-201605-citibike-tripdata.csv")
+jc201606 <- read_csv("JC-201606-citibike-tripdata.csv")
+jc201607 <- read_csv("JC-201607-citibike-tripdata.csv")
+jc201608 <- read_csv("JC-201608-citibike-tripdata.csv")
+jc201609 <- read_csv("JC-201609-citibike-tripdata.csv")
+jc201610 <- read_csv("JC-201610-citibike-tripdata.csv")
+jc201611 <- read_csv("JC-201611-citibike-tripdata.csv")
+jc201612 <- read_csv("JC-201612-citibike-tripdata.csv")
+
+jc201701 <- read_csv("JC-201701-citibike-tripdata.csv")
+jc201702 <- read_csv("JC-201702-citibike-tripdata.csv")
+jc201703 <- read_csv("JC-201703-citibike-tripdata.csv")
+jc201704 <- read_csv("JC-201704-citibike-tripdata.csv")
+jc201705 <- read_csv("JC-201705-citibike-tripdata.csv")
+jc201706 <- read_csv("JC-201706-citibike-tripdata.csv")
+jc201707 <- read_csv("JC-201707-citibike-tripdata.csv")
+jc201708 <- read_csv("JC-201708-citibike-tripdata.csv")
+jc201709 <- read_csv("JC-201709-citibike-tripdata.csv")
+jc201710 <- read_csv("JC-201710-citibike-tripdata.csv")
+jc201711 <- read_csv("JC-201711-citibike-tripdata.csv")
+jc201712 <- read_csv("JC-201712-citibike-tripdata.csv")
+
+
+jc201801 <- read_csv("JC-201801-citibike-tripdata.csv")
+jc201802 <- read_csv("JC-201802-citibike-tripdata.csv")
+jc201803 <- read_csv("JC-201803-citibike-tripdata.csv")
+jc201804 <- read_csv("JC-201804-citibike-tripdata.csv")
+jc201805 <- read_csv("JC-201805-citibike-tripdata.csv")
+jc201806 <- read_csv("JC-201806-citibike-tripdata.csv")
+jc201807 <- read_csv("JC-201807-citibike-tripdata.csv")
+jc201808 <- read_csv("JC-201808-citibike-tripdata.csv")
+```
+
+
+I tried binding all data sets with bind_rows(), but the names of the columns were different in some of the csv files, which caused some columns to repeat themselves and produced some NA values. Also, not all values in the variable 'birth year' were integers, which was stopping me from successfully binding all files. The solution was to change 'birth year' from character into integer on some of the data sets and then rename all columns in all datasets at once. To rename the columns in all data sets, as a first step, I created a vector with definite column names, using colnames(). Then, I created a list containing all individual data sets. 
+ 
+
+
+```{r include=FALSE}
+jc201704$`birth year` <- as.integer(jc201704$`birth year`)
+jc201705$`birth year` <- as.integer(jc201705$`birth year`)
+jc201706$`birth year` <- as.integer(jc201706$`birth year`)
+jc201707$`birth year` <- as.integer(jc201707$`birth year`)
+jc201708$`birth year` <- as.integer(jc201708$`birth year`)
+jc201709$`birth year` <- as.integer(jc201709$`birth year`)
+jc201710$`birth year` <- as.integer(jc201710$`birth year`)
+jc201711$`birth year` <- as.integer(jc201711$`birth year`)
+jc201712$`birth year` <- as.integer(jc201712$`birth year`)
+```
+
+
+
+```{r include=FALSE}
+colnames <- c("trip_duration", "start_time", "stop_time", "start_station_id", 
+              "start_station_name", "start_station_latitude", "start_station_longitude", 
+              "end_station_id", "end_station_name", "end_station_latitude", 
+              "end_station_longitude", "bike_id", "user_type", "birth_year", "gender")
+```
+
+
+```{r include=FALSE }
+dfList <- list(jc201509 = jc201509, jc201510 = jc201510, 
+               jc201511 = jc201511, jc201512 = jc201512,
+               jc201601 = jc201601, jc201602 = jc201602, 
+               jc201603 = jc201603, jc201604 = jc201604,
+               jc201605 = jc201605, jc201606 = jc201606,
+               jc201607 = jc201607, jc201608 = jc201608,
+               jc201609 = jc201609, jc201610 = jc201610,
+               jc201611 = jc201611, jc201612 = jc201612,
+               jc201701 = jc201701, jc201702 = jc201702,
+               jc201703 = jc201703, jc201704 = jc201704,
+               jc201705 = jc201705, jc201706 = jc201706,
+               jc201707 = jc201707, jc201708 = jc201708,
+               jc201709 = jc201709, jc201710 = jc201710,
+               jc201711 = jc201711, jc201712 = jc201712,
+               jc201801 = jc201801, jc201802 = jc201802,
+               jc201803 = jc201803, jc201804 = jc201804,
+               jc201805 = jc201805, jc201806 = jc201806, 
+               jc201807 = jc201807, jc201808 = jc201808)
+```
+
+Finally I used lapply(), to apply colnames() over dfList, and list2env(), to make sure all individual datasets would be available on my Global Environment, in case I needed to check any information from a specific month. 
+
+```{r }
+list2env(lapply(dfList, setNames, colnames), .GlobalEnv)
+```
+
+I was then finally able to bind all 36 data sets using bind_rows().
+
+```{r include=FALSE}
+library(dplyr)
+df <- bind_rows(jc201509, jc201510, jc201511, jc201512,
+                jc201601, jc201602, jc201603, jc201604,
+                jc201605, jc201606, jc201607, jc201608,
+                jc201609, jc201610, jc201611, jc201612,
+                jc201701, jc201702, jc201703, jc201704,
+                jc201705, jc201706, jc201707, jc201708,
+                jc201709, jc201710, jc201711, jc201712,
+                jc201801, jc201802, jc201803, jc201804,
+                jc201805, jc201806, jc201807, jc201808)
+
+```
+
+
+As I knew great part of my workload would be related to time series analysis, I decided to extract some extra information from my variable start_time, a POSIXct object. I used some functions from the lubridate package to extract  month, year, day of the week,week of the year and hour of the day. All these items were put in  separated columns, so that I could have easy access to them.
+
+```{r message=FALSE}
+library(lubridate)
+df$month <- month(df$start_time)
+df$year <- year(df$start_time)
+df$year_month <- format(df$start_time, format = "%Y-%m")
+df$day_of_week <- wday(df$start_time, label = TRUE)
+df$hour_of_day <- hour(df$start_time)
+df$week_of_year <- week(df$start_time)
+df$day_of_month <- day(df$start_time)
+
+```
+
+The trip_duration variable was in seconds. As it is not very intuitive to work with this unit of measurement, I used the mutate() function from the dplyr package to transform seconds into minutes, by simply dividing values by 60 and storing them in a new column, duration_minutes.
+
+```{r}
+df <- mutate(df, duration_minutes = round(trip_duration / 60)) 
+
+```
+
+
+Now I am finally ready to check into the  data set's  structure and investigated for NA and values that don't make sense.
+
+```{r}
+glimpse(df)
+```
+
+
+Generally speaking, there is not much strange data and NA values, except for two variables: birth_year and duration_minutes (trip_duration).
+
+
+Most of the data was generated automatically as users rode their bikes. Birth year is the only information in this data set  users were requested to inform Citi Bikes. And that's why there are some NA values (5.35% of the data) and some others don't make much sense. As much as I would like to believe elderly people have been exercising a lot in New Jersey, it seems a bit unrealistic that too many people over 80 years of age would be riding a Citi bike. So I decided to replace all birth years prior to 1938 with NA values. 
+
+```{r}
+df$birth_year <- replace(df$birth_year, df$birth_year < 1938, NA)
+summary(df$birth_year)
+```
+
+Regarding the duration_minutes variable, there are a few trips which lasted many hours, even days. That does not make sense since Citi Bikes charges their bikers per amount of time spent riding, which means that very long rides would be way too expensive. As we go ahead with  the analysis, I will present  a plot with the duration_minutes distribution and these erroneous data will be further analyzed. For now, I will keep this data in the data set. 
+
+```{r}
+summary(df$duration_minutes)
+```
+
+## Initial Exploratory Data Analysis
+
+### Seasonality
+
+Considering the first three years of operations, there were  826,012 rides, since day one, with a monthly distribution as follows:
+
+
+```{r, include=FALSE}
+trips_monthly <- df %>% group_by(year_month) %>% count()
+
+trips_monthly
+
+```
+ 
+
+```{r}
+library(ggplot2)
+trips_monthly_p <- ggplot(df, aes(x = year_month)) +
+  geom_bar(aes(fill=year_month))+
+  theme(axis.text.x=element_text(angle=90,hjust=1,vjust=0.5), 
+        legend.position="none", plot.title = element_text(hjust = 0.5))+
+  scale_y_continuous("Trips count")+
+  scale_x_discrete("Year and Month")+
+  ggtitle("Trips count by year and month")
+  
+
+trips_monthly_p
+
+```
+
+
+As expected, the month of the year has a big impact on the amount of trips: more trips are taken on warmer months than during winter and fall. This piece of information is the first cue that month might be a strong independent variable for building our algorithm. 
+
+Another expected fact is that weekdays are busier than weekends, with the busiest day being Wednesday, and the smallest quantity of trips being on Sunday.
+
+```{r, include=FALSE}
+trips_daily <- df %>% group_by(day_of_week) %>% count()
+trips_daily
+
+```
+
+```{r}
+trips_daily_p <- ggplot(df, aes(x = day_of_week)) +
+  geom_bar(aes(fill = day_of_week)) +
+  theme(legend.position="none", plot.title = element_text(hjust = 0.5))+
+  scale_y_continuous("Trips count", breaks = seq(0, 200000, by = 40000)) +
+  scale_x_discrete("User Type")+
+  ggtitle("Trips count by day of the week")
+
+trips_daily_p
+
+```
+
+On weekdays, most of the trips are taken in two different moments of the day: between 7 and 9 am, and between 5 and 7 pm, which is also very predictable, as it is the most usual hours people leave/arrive home from either work or school. 
+
+```{r, include=FALSE}
+trips_weekdays <- filter(df, day_of_week != "Sun" & day_of_week != "Sat")
+trips_weekdays
+
+```
+
+```{r}
+trips_weekdays_plot <- ggplot(trips_weekdays, aes(x = factor(hour_of_day))) +
+  geom_bar(aes(fill = factor(hour_of_day))) +
+  theme(legend.position="none", plot.title = element_text(hjust = 0.5))+
+  scale_y_continuous("Trips count", breaks = seq(0, 130000, by = 20000)) +
+  scale_x_discrete("Hour of the day")+
+  ggtitle("Trips count by hour of the day on weekdays")
+
+
+trips_weekdays_plot
+
+```
+
+
+On the other hand, on weekends, trips are more evenly spread throughout the day, with higher concentration between 10 am and 7 pm. The difference between these two distributions and the importance of time of the day for the variation of trips quantity are very clear on the following plot:
+
+```{r, include=FALSE}
+
+df$week <- df$day_of_week
+df$week <- gsub(pattern = "^S.*$", replacement = "weekend", df$week)
+df$week <- gsub(pattern = "^[M,T,W,F].*$", replacement = "weekday", df$week)
+
+```
+
+
+```{r}
+wkday_wkend_p <- ggplot(df, aes(x = factor(hour_of_day), fill = week)) +
+  geom_bar(position = "dodge" ) +
+  theme(legend.title=element_blank(), plot.title = element_text(hjust = 0.5))+
+  scale_y_continuous("Trips count", breaks = seq(0, 1200000, by = 30000)) +
+  scale_x_discrete("Hour of the day")+
+  ggtitle("Trips count by hour of the day on weekdays and weekends")
+
+wkday_wkend_p
+
+```
+
+
+###Demographics
+
+```{r, include=FALSE}
+df$birth_year <- replace(df$birth_year, df$birth_year < 1938, NA)
+summary(df$birth_year)
+
+
+```
+
+
+Most users were born in the 80s, following by those born in the lates 70s and early 90s. See full distribution below.  It is important to highlight that one has to be 16 years or older to ride a Citi bike.
+
+
+```{r warning=FALSE}
+birth_year_p <- ggplot(df, aes(x = birth_year))+
+  geom_bar(aes(fill = "birth_year"))+ 
+  scale_x_continuous("Birth Year", breaks = seq(1939, 2002, by = 4) )+
+  ggtitle("Birth Year Distribution")+
+  theme(legend.position = "none", plot.title = element_text(hjust = 0.5))
+
+birth_year_p
+
+```
+
+The bar plot below tells us that most of the trips were made by men (592.683), while only 171.404 trips were taken by women.
+
+```{r}
+gender_bar <- ggplot(df, aes(x = factor(gender), fill = factor(gender))) +
+  geom_bar() +
+  scale_x_discrete("User' genders", breaks=c("0", "1", "2"),labels=c("Unknown", "Male", "Female")) +
+  scale_fill_discrete("Gender", breaks=c("0", "1", "2"),labels=c("Unknown", "Male", "Female")) +
+  scale_y_continuous("Number of trips")
+
+gender_bar
+
+```
+
+
+###User type  
+
+There are two user types:
+
+**Customer**, that is, a person who bought either a  24-hour pass, for 12 dollars, or 3-day pass, for 24 dollars. These passes include unlimited 30-minute rides. If a customer keeps a bike for more than 30 minutes, he/she will have to pay an extra fee of 4 dollars per additional 15 minutes. 
+
+**Subscriber**, a client who has signed up for an annual membership, for  169 dollars. Annual members can go on unlimited 45-minute rides. For longer rides,  they are charged  2.50 dollars
+per additional 15 minutes.
+
+As Jersey City is not a tourist spot, like NY City, it is not surprising that most of the rides are made by subscribers, and not eventual users.
+
+```{r}
+user_gender_stack <- ggplot(df, aes(x = user_type, fill = factor(gender))) +
+  geom_bar(position = "stack" ) +
+  scale_fill_discrete("Gender", breaks=c("0", "1", "2"),labels=c("Unknown", "Male", "Female")) +
+  scale_y_continuous("Number", breaks = seq(0, 900000, by = 50000)) +
+  scale_x_discrete("User Type")
+
+user_gender_stack
+
+```
+
+
+###Trips 
+
+There are 50 stations serving Jersey Bikes  across Jersey city.
+
+These are the top 10 most frequent  start stations and the related number of trips:
+
+
+```{r}
+origin <- df %>%  group_by(start_station_name) %>% count() %>%  arrange(desc(n))
+origin
+```
+
+These are the top 10 most frequent end stations and the related number of trips:
+
+
+```{r}
+destination <- df %>%  group_by(end_station_name) %>%  count %>%  arrange(desc(n))
+destination
+
+```
+
+These are the most popular routes:
+
+```{r}
+combination<- df %>% group_by(start_station_name, end_station_name) %>% tally() %>%  arrange(desc(n))
+combination
+
+```
+
+And these are the most popular routes by time of the day:
+
+```{r}
+combination_hour<- df %>% group_by(start_station_name, end_station_name, hour_of_day) %>% tally() %>%  arrange(desc(n))
+combination_hour
+
+```
+
+The plot below shows us the distribution of trips according to their duration.
+
+```{r, include=FALSE}
+df$intervals <- df$duration_minutes
+
+
+my_fun <- function(x) {
+  if (x <= 60) {
+    if(x %% 2 == 1) {
+      paste(x + 1)
+    } else {
+      paste(x)
+    }
+  } else if (x >= 61 ) {
+    paste(61)
+  }
+  
+}
+
+df$intervals <- sapply(df$intervals, my_fun)
+df$intervals <- as.integer(df$intervals)
+
+```
+
+
+
+```{r}
+duration_p <- ggplot(df, aes(x = intervals)) +
+  geom_bar(aes(fill = factor(intervals)))+
+  theme(legend.position = "none",  plot.title = element_text(hjust = 0.5))+
+  scale_y_continuous("Trips count", breaks = seq(0, 250000, 50000 )) +
+  scale_x_continuous("Trip duration up to x minutes", breaks = seq(0, 60, by = 2))+ 
+  ggtitle("Trips count by trip duration")
+
+
+duration_p
+
+```
+
+
+### Bike Ids
+
+There have been `r n_distinct(df$bike_id)` different bike ids.
+
+Bike ids that have made more trips are:
+
+```{r}
+journeys_ind <- df %>% group_by(bike_id) %>% count() %>% arrange(desc(n))
+journeys_ind
+
+```
+
+The average number of trips made by each bike id is:
+ 
+```{r}
+avg_trips <- mean(journeys_ind$n)
+avg_trips
+
+```
+
+And this is the average life of a bike id:
+
+
+```{r}
+bikeid_life <- df %>%  group_by(bike_id) %>%
+  summarise(min_date = min(start_time), max_date = max(stop_time), 
+            life = min_date - max_date)
+
+bikeid_life
+
+mean(bikeid_life$life)  
+
+```
+
+## Continuing Data Wrangling
+
+As my main goal is to create an algorithm that predicts the number of rides in a given hour, I have added Newark's airport weather records to this project to help me investigate how weather conditions might impact Citi Bike usage.
+
+
+After importing the weather dataset and selecting the variables I would work with, I have noticed that the only common aspects between both datasets were date and time. So I used them to create a common identifier to merge the datasets, which was composed of  "year month day hour".
+
+
+
+```{r include=FALSE}
+#imports the weather data set
+weather <- read_csv("weather.csv")
+glimpse(weather)
+#selects meaninful variables 
+weather_clean <- subset(weather, select = c(DATE, HOURLYPRSENTWEATHERTYPE,  
+                                            HOURLYDRYBULBTEMPC, HOURLYRelativeHumidity, 
+                                            HOURLYWindSpeed, HOURLYPrecip))
+#creates year, month, day_of_month and hour_of_day columns
+weather_clean$year <- year(weather_clean$DATE)
+weather_clean$month <- month(weather_clean$DATE)
+weather_clean$day_of_month <- day(weather_clean$DATE)
+weather_clean$hour_of_day <- hour(weather_clean$DATE)
+```
+
+
+```{r}
+weather_clean$id <- paste(weather_clean$year, weather_clean$month, 
+                          weather_clean$day_of_month, weather_clean$hour_of_day)
+```
+
+```{r}
+df$id <- paste(df$year, df$month, df$day_of_month, df$hour_of_day)
+
+```
+
+
+
+```{r echo=FALSE, results="asis"}
+library(knitr)
+kable(weather_clean[1:5,7:11]) 
+```
+
+
+```{r include=FALSE}
+weather_clean_23h <- filter(weather_clean, hour_of_day == 23 )
+weather_clean_23h <- weather_clean_23h[!duplicated(weather_clean_23h$id, fromLast=T), ]
+weather_clean <- weather_clean %>% anti_join(weather_clean_23h)
+weather_clean <- weather_clean[!duplicated(weather_clean$id, fromLast=T), ]
+weather_clean$year <- NULL
+weather_clean$month <- NULL
+weather_clean$day_of_month <- NULL
+weather_clean$hour_of_day <- NULL
+weather_clean$DATE <-NULL
+colnames(weather_clean) <- c("weather_type", "temperature", "humidity", "wind_speed", "precipitation", "id")
+```
+
+
+```{r}
+df_merged <- left_join(df, weather_clean, by = "id")
+```
+
+Now the dataset contains 5 new variables: weather_type, temperature, humidity, wind_speed and precipitation.
+
+
+```{r include=FALSE}
+df_merged <- df_merged[c(26, 2, 3, 1, 4:25, 28, 29, 30, 31, 27)]
+
+```
+
+Precipitation amounts are given in inches. Trace amounts of precipitation were indicated with a "T" on the original dataset, but they have been changed by into 0, as well as NA values. There were also some rare NA values in temperature and humidity. For such cases, the average value of the previous and following observations was computed. 
+
+The weather_type variable contained 128 different combinations of upper and low case letters, ponctuation and numbers. After consulting the data set guide to indetify each component's meaning - the guide can be consulted 
+[here]( https://www1.ncdc.noaa.gov/pub/data/cdo/documentation/LCD_documentation.pdf) - I created a column for each weather type (drizzle, rain, snow, ice pellets and thunder) and I filled them in with booleans accordingly. 
+
+The last point to note is the creation of the column season and filled with 1 (winter), 2 (fall), 3 (spring), 4 (summer). Subsequently I  created a column named  holiday and I identified all federal and state holidays, as they would presumably have an effect on bike trips.
+
+
+
+```{r include=FALSE}
+df_merged$drizzle <- df_merged$weather_type
+df_merged$rain <- df_merged$weather_type
+df_merged$snow <- df_merged$weather_type
+df_merged$ice_pellets <- df_merged$weather_type
+df_merged$thunder <- df_merged$weather_type
+
+
+df_merged$drizzle <- grepl("^.*DZ.*$", df_merged$drizzle)
+df_merged$rain <- grepl("^.*RA.*$", df_merged$rain)
+df_merged$snow <- grepl("^.*SN.*$", df_merged$snow)
+df_merged$ice_pellets <- grepl("^.*PL.*$", df_merged$ice_pellets)
+df_merged$thunder <- grepl("^.*TS.*$", df_merged$thunder)
+
+
+df_merged$drizzle <- as.numeric(df_merged$drizzle)
+df_merged$rain <- as.numeric(df_merged$rain)
+df_merged$snow <- as.numeric(df_merged$snow)
+df_merged$ice_pellets <- as.numeric(df_merged$ice_pellets)
+df_merged$thunder <- as.numeric(df_merged$thunder)
+```
+
+```{r include=FALSE}
+df_merged$season <- df_merged$month
+
+df_merged$season <- gsub(pattern = "12|1|2", replacement = 1, x = df_merged$season)
+df_merged$season <- gsub(pattern = "3|4|5", replacement = 2, x = df_merged$season)
+df_merged$season <- gsub(pattern = "6|7|8", replacement = 3, x = df_merged$season)
+df_merged$season <- gsub(pattern = "9|10|11", replacement = 4, x = df_merged$season)
+
+```
+
+```{r include=FALSE}
+df_merged$holiday <- df_merged$id
+
+df_merged$holiday <- gsub(pattern = "2015 10 12 .*|2015 11 3 .*|2015 11 11 .*", replacement = 1, x = df_merged$holiday)
+df_merged$holiday <- gsub(pattern = "2016 1 1 .*|2016 1 18 .*|2016 2 15 .*", replacement = 1, x = df_merged$holiday)
+df_merged$holiday <- gsub(pattern = "2016 3 25 .*|2016 5 30 .*|2016 7 4 .*", replacement = 1, x = df_merged$holiday)
+df_merged$holiday <- gsub(pattern = "2016 9 5 .*|2016 10 10 .*|2016 11 11 .*", replacement = 1, x = df_merged$holiday)
+df_merged$holiday <- gsub(pattern = "2016 11 24 .*|2016 12 26 .*|2017 1 2 .*", replacement = 1, x = df_merged$holiday)
+df_merged$holiday <- gsub(pattern = "2017 1 16 .*|2017 2 20 .*|2017 4 14 .*", replacement = 1, x = df_merged$holiday)
+df_merged$holiday <- gsub(pattern = "2017 5 29 .*|2017 7 4 .*|2017 9 4 .*", replacement = 1, x = df_merged$holiday)
+df_merged$holiday <- gsub(pattern = "2017 10 9 .*|2017 11 7 .*|2017 11 10 .*", replacement = 1, x = df_merged$holiday)
+df_merged$holiday <- gsub(pattern = "2017 11 23 .*|2017 12 25 .*|2018 1 1 .*", replacement = 1, x = df_merged$holiday)
+df_merged$holiday <- gsub(pattern = "2018 1 15 .*|2018 2 19 .*|2018 3 30 .*", replacement = 1, x = df_merged$holiday)
+df_merged$holiday <- gsub(pattern = "2018 5 28 .*|2018 7 4 .*", replacement = 1, x = df_merged$holiday)
+df_merged$holiday <- gsub(pattern = "2.*", replacement = 0, x = df_merged$holiday)
+
+```
+
+
+
+```{r include=FALSE}
+df_merged$precipitation <- gsub(pattern = "T", replacement = 0, x = df_merged$precipitation)
+
+df_merged$precipitation <- replace(df_merged$precipitation, is.na(df_merged$precipitation), 0) 
+
+
+df_merged$humidity <- replace(df_merged$humidity, is.na(df_merged$humidity), 32) 
+
+
+df_merged$temperature[103166:103184] <- 15
+df_merged$temperature[155384:155416] <- 29
+
+
+
+```
+
+As I am trying to predict the number of trips per hour, variables that describe individual characteristics of specific trips or users will not be taken into consideration to build our model, such as start/stop station id, name, latitude, longitude, trip duration, gender, user_type and birth_year. So I have subseted the data frame and renamed it into df_merged2.
+
+
+```{r}
+df_merged2 <- df_merged[c(1, 17, 18, 20:23, 25, 27:30, 32:38)]
+```
+
+To conclude, using df_merged2, I counted trips per hour and then added the output to column n in df_ml, the dataset will be used to build our model. As rows were duplicated, I removed repetitions with !duplicated().  This is the final dataset.
+
+```{r}
+trips_hourly <- (df_merged2 %>% group_by(id) %>% count())
+
+df_ml <- left_join(df_merged2, trips_hourly, by = "id")
+
+df_ml <- df_ml[!duplicated(df_ml$id), ]
+head(df_ml)
+```
+
+## Continuig Exploratory Data Analysis
+
+This scatterplot of temperature against bike trips count depicts that temperatures are positively correlated with the amount of trips, as we see that bike journey count increases as temperature increases up to 30ºC. Temperatures higher than that cause the count to decrease.
+
+
+```{r }
+temp_count <- ggplot(df_ml, aes(x = temperature, y = n))+
+              geom_point(aes(color = temperature))+
+              theme(legend.position = "none", plot.title = element_text(hjust = 0.5))+
+              scale_x_continuous("Temperature", breaks = seq(-20, 40, by = 2))+
+              scale_y_continuous("Trips count", breaks = seq( 0, 340, by = 20))+
+              ggtitle("Bike Rides by Temperature")+
+              scale_color_gradientn(colors=c('dark blue','blue','light blue','light green','yellow','orange','red')) 
+
+temp_count
+
+```
+
+On the other hand, the humidity against trips count plot portrays that there are less trips when humity is either too low or too high, and the count is similar between 40 and 80 relative humidity.
+
+```{r }
+humidity_count <- ggplot(df_ml, aes(x = humidity, y = n))+
+  geom_point(aes(color = humidity))+
+  theme(plot.title = element_text(hjust = 0.5))+
+  scale_color_gradient(high='purple',low='green')+
+  scale_x_continuous(" Relative Humidity", breaks = seq(0, 100, by = 20))+
+  scale_y_continuous("Trips count", breaks = seq( 0, 340, by = 20))+
+  ggtitle("Bike Rides by Relative Humidity ")
+
+humidity_count
+
+```
+
+To conclude, our last plot shows that wind speed is negatively correlated with the number of trips.  
+
+```{r }
+winds_count <- ggplot(df_ml, aes(x = wind_speed, y = n))+
+  geom_jitter(aes(color = wind_speed))+
+  theme(legend.position = "none", plot.title = element_text(hjust = 0.5))+
+  scale_x_continuous("Wind Speed (miles per hour)", breaks = seq(0, 50, by = 5))+
+  scale_y_continuous("Trips count", breaks = seq( 0, 340, by = 20))+
+  ggtitle("Bike Rides by Wind Speed")+
+  scale_color_gradientn(colors=c('dark blue','blue','light blue','light green','yellow','orange','red'))
+
+winds_count
+
+```
+
+
+## Creating a Predictive Model
+
+Machine learning was used to create a linear regression model for the number of trips in a given date and hour (n), which is a continuous outcome. To fit the model, I analyzed both the Multiple and  Adjusted R Squared, as well as p values,  significance codes and root mean square error. 
+
+
+Firstly, the dataset was split using a 0.75 ratio.  
+
+```{r eval=FALSE}
+set.seed(123)   
+sample <- sample.split(df_ml, SplitRatio = 0.75) 
+train <- subset(df_ml,sample==TRUE) 
+test <- subset(df_ml, sample==FALSE)
+
+```
+
+
+The first linear regression model (mod1) was created using all predictors in the machine learning dataset, and a R2 equal to 0.6492 was obtained.  
+
+```{r include=FALSE}
+trips_train <- read_csv("train.csv")
+trips_train <- trips_train[-c(1)]
+str(trips_train)
+
+trips_train$year <- as.factor(trips_train$year)
+trips_train$hour_of_day <- as.factor(trips_train$hour_of_day) 
+trips_train$week_of_year <- as.factor(trips_train$week_of_year) 
+
+
+trips_test <- read_csv("test.csv")
+trips_test <- trips_test[-c(1)]
+
+
+trips_test$year <- as.factor(trips_test$year)
+trips_test$hour_of_day <- as.factor(trips_test$hour_of_day)
+trips_test$week_of_year <- as.factor(trips_test$week_of_year)
+
+```
+
+```{r}
+mod1 <- lm(n ~  month + year + day_of_week + hour_of_day + week_of_year + day_of_month + week + temperature + humidity + wind_speed + precipitation + drizzle + rain + snow + ice_pellets + thunder + season + holiday, data = trips_train)
+
+summary(mod1)
+
+```
+
+
+In order to build a stronger model (mod2), variables month and week_of_year, which are highly correlated, were dropped one at a time, to investigate the model with the highest R2 and to avoid multicollinearity. If the variable month was kept, R2  would equal 0.6432. Whereas if week_of_year was kept, R2 would be 0.6491. So week_of_year was kept. Precipitation, rain, humidity and drizzle are also highly correlated. After performing the same steps, humidity remained in the model (R2 is equal to 0.6453).
+
+Turning to the coefficients table again, there is an error "1 not defined because of singularities", related to week, which is also highly related to day_of_week. Removing day_of_ week would cause the model to have its R2 reduced, so the week variable was dropped.
+
+Next, insignificant variables were removed, one by one, according to the significance codes on the coefficients table. The one with the highest Pr(>|t|) was dropped first. After dropping thunder, snow and day_of_month, our R2 remains unaltered. The predictor season was also dropped, not only does it have low significance, but it is also correlated to week_of_year. All these modifications created a simpler model, with a slightly smaller Adjusted R2 (mod2 = 0.6452), as verified on the table below. Also, running mod2 to make predictions generated a RMSE equal to 21.74469. 
+
+
+
+```{r}
+mod2 <- lm(n ~ year + day_of_week + hour_of_day + week_of_year +  temperature + humidity + wind_speed + ice_pellets + holiday, data = trips_train)
+summary(mod2)
+
+
+prediction2 <- predict(mod2, newdata = trips_test) 
+SSE_prediction2 <- sum((prediction2 - trips_test$n)^2)
+RMSE_2 <- sqrt(SSE_prediction2/nrow(trips_test))
+RMSE_2
+
+```
+
+
+There were many other attempts to build stronger models, but mod2 was the best one so far. To check if an interaction of features could improve the model, mod3 was created with the variable humidity2. This interaction made our R2 go up to 0.6479. Running mod3 to make predictions generated a RMSE equal to 21.29569, slightly better than mod2. 
+   
+
+```{r}
+trips_train$humidity2 <- trips_train$humidity*trips_train$humidity
+trips_test$humidity2 <- trips_test$humidity*trips_test$humidity
+
+mod3 <- lm(n ~  year + day_of_week + hour_of_day + week_of_year + temperature + humidity2 + wind_speed + ice_pellets + holiday, data = trips_train)
+summary(mod3)
+
+
+prediction3 <- predict(mod3, newdata = trips_test) 
+SSE_prediction3 <- sum((prediction3 - trips_test$n)^2)
+RMSE_3 <- sqrt(SSE_prediction3/nrow(trips_test))
+RMSE_3
+
+
+```
+
+```{r include=FALSE}
+remove(trips_train)
+remove(trips_test)
+```
+
+```{r include=FALSE}
+library(randomForest)
+library(Metrics)
+
+
+trips_train <- read_csv("train.csv")
+trips_train <- trips_train[-c(1)]
+trips_train$id <- NULL
+
+trips_train$day_of_week <- as.factor(trips_train$day_of_week)
+trips_train$week <- as.factor(trips_train$week)
+
+
+trips_test <- read_csv("test.csv")
+trips_test <- trips_test[-c(1)]
+trips_test$id <- NULL
+
+trips_test$day_of_week <- as.factor(trips_test$day_of_week)
+trips_test$week <- as.factor(trips_test$week)
+```
+
+Even though using interaction slightly improved our linear regression model, let's try to fit a Random Forest model, and check if this classification algorithm might improve our prediction accuracy.  
+
+
+```{r}
+model_1 <- randomForest(n ~ ., data=trips_train)
+
+
+prediction <- predict(model_1, trips_test)
+model_output <- cbind(trips_test, prediction)
+model_output$log_prediction <- log(model_output$prediction)
+model_output$log_n <- log(model_output$n)
+
+rmse(model_output$log_n,model_output$log_prediction)
+
+```
+
+All of the independent variables were used in the model, as the algorithm is smart to only select the ones that will help with our prediction. A RMSE of 0.48444 was obtained, which is still very high, but better than the linear regression models presented above. 
+
+##Conclusion and Recommendations
+
+The model created on this study generates a prediction that does not get the very exact number of trips in a given time a date most of the times. However, it clearly understands general demand trends, such as if there will be low, medium, high or extreme demand at a certain moment. Maybe a more refined weather dataset as well as adding other elements, such as traffic-related variables, could help improve its accuracy. 
+
+Yet, this analysis exemplifies how automatically generated data can depict trends and variations on the service usage, and it is a relevant content for business decision making. Identifying elements that influence demand may help better allocate resources and leverage ROI.
+
+Seasonality analysis can be used to plan preventive maintenance. Our model can also be used to help predict daily demand, avoiding the shortage of bikes in peak hours (and vice versa). Foreseeing times of high demand is important to work on the expansion of the network. 
+
+Identifying the most frequent journeys is valuable to plan expansion in these regions. And further analysis into these journeys might also reveal not so obvious factors that influence demand, such as road conditions for bicycle traffic between them.
+
+
+The existing gap between male and female ridership shows that there are barriers for women to use the service. Identifying such barriers - which I suppose might be related to safety and bike path conditions around the city - could be arranged by the company alongside third parties, in order to provide a service that meets the needs of women as well, which could lead to thousands of new customers. 
+
+
+
+
+
+
+
+
+
+
+
+
+
