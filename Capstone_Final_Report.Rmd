@@ -52,7 +52,7 @@ The overall data set includes over 860,000 observations and 15 variables, as fol
 * Start and End Station IDs
 
 * Station Lat/Long
-
+ 
 * Bike ID
 
 * User Type 
@@ -69,7 +69,7 @@ After downloading and unzipping all 36 csv files, they were read into R Studio i
 
 ```{r include=FALSE}
 Sys.setlocale("LC_TIME", "English_US")
-setwd("C:/Users/aline/Desktop/Springboard/JC_Citi_Bikes_Capstone")
+setwd("C:/Users/aline/Desktop/Springboard/Capstone_Springboard")
 
 ```
 
@@ -772,7 +772,7 @@ In order to build a stronger model (mod2), variables month and week_of_year, whi
 
 Turning to the coefficients table again, there is an error "1 not defined because of singularities", related to week, which is also highly related to day_of_week. Removing day_of_ week would cause the model to have its R2 reduced, so the week variable was dropped.
 
-Next, insignificant variables were removed, one by one, according to the significance codes on the coefficients table. The one with the highest Pr(>|t|) was dropped first. After dropping thunder, snow and day_of_month, our R2 remains unaltered. The predictor season was also dropped, not only does it have low significance, but it is also correlated to week_of_year. All these modifications created a simpler model, with a slightly smaller Adjusted R2 (mod2 = 0.6452), as verified on the table below. Also, running mod2 to make predictions generated a RMSE equal to 21.74469. 
+Next, insignificant variables were removed, one by one, according to the significance codes on the coefficients table. The one with the highest Pr(>|t|) was dropped first. After dropping thunder, snow and day_of_month, our R2 remains unaltered. The predictor season was also dropped, not only does it have low significance, but it is also correlated to week_of_year. All these modifications created a simpler model, with a slightly smaller Adjusted R2 (mod2 = 0.6452), as verified on the table below. Also, running mod2 to make predictions generated a RMSE equal to 21.37375. 
 
 
 
@@ -850,7 +850,7 @@ rmse(model_output$log_n,model_output$log_prediction)
 
 ```
 
-All of the independent variables were used in the model, as the algorithm is smart to only select the ones that will help with our prediction. A RMSE of 0.48444 was obtained, which is still very high, but better than the linear regression models presented above. 
+All of the independent variables were used in the model, as the algorithm is smart to only select the ones that will help with our prediction. A RMSE of 0.48 was obtained, which is still very high, but better than the linear regression models presented above. 
 
 ##Conclusion and Recommendations
 
@@ -864,16 +864,6 @@ Identifying the most frequent journeys is valuable to plan expansion in these re
 
 
 The existing gap between male and female ridership shows that there are barriers for women to use the service. Identifying such barriers - which I suppose might be related to safety and bike path conditions around the city - could be arranged by the company alongside third parties, in order to provide a service that meets the needs of women as well, which could lead to thousands of new customers. 
-
-
-
-
-
-
-
-
-
-
 
 
 
